@@ -1,0 +1,1 @@
+rootProject.name = "com.inspiredcoda.quiz-demo"
