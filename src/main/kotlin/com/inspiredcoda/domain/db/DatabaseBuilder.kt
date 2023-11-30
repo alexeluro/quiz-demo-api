@@ -5,7 +5,7 @@ import org.litote.kmongo.KMongo
 
 object DatabaseBuilder {
 
-    var database: MongoDatabase? = null
+    private var database: MongoDatabase? = null
 
     init {
         createDatabaseInstance()

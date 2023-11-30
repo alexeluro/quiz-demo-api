@@ -4,6 +4,7 @@ import com.inspiredcoda.domain.model.Difficulty
 import com.inspiredcoda.domain.model.Question
 import com.mongodb.client.MongoDatabase
 import org.litote.kmongo.eq
+import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
 import org.litote.kmongo.updateOne
 
@@ -13,8 +14,13 @@ class QuizQuestionRepositoryImpl(
 
     val questionCollection = database.getCollection<Question>()
 
+
     override suspend fun getQuestions(difficulty: Difficulty): List<Question> {
         return questionCollection.find(Question::difficulty eq difficulty).toList()
+    }
+
+    override suspend fun getQuestion(id: String): Question? {
+        return questionCollection.findOne(Question::id eq id)
     }
 
     override suspend fun addQuestion(question: Question): Boolean {

@@ -20,6 +20,12 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
+//ktor {
+//    fatJar {
+//        this.archiveFileName.set("quiz_demo.jar")
+//    }
+//}
+
 repositories {
     mavenCentral()
 }

@@ -1,8 +1,7 @@
 package com.inspiredcoda.route
 
-import com.inspiredcoda.domain.model.BaseResponse
-import com.inspiredcoda.domain.model.Difficulty
-import com.inspiredcoda.domain.model.Question
+import com.inspiredcoda.domain.model.*
+import com.inspiredcoda.domain.repository.QuizComputationsRepository
 import com.inspiredcoda.domain.repository.QuizQuestionRepository
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -10,20 +9,24 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Route.quizRoute(repository: QuizQuestionRepository) {
+/**
+ * All routes related to the Quiz API
+ * */
+fun Route.quizRoute(repository: QuizQuestionRepository, computationRepository: QuizComputationsRepository) {
 
     val allQuestions = mutableListOf<Question>()
 
     get("/questions") {
         return@get try {
             val difficulty = call.parameters["difficulty"] ?: "BEGINNER"
+            val questions = repository.getQuestions(Difficulty.valueOf(difficulty)).removeAnswers()
 
             call.respond(
                 status = HttpStatusCode.OK,
                 BaseResponse<List<Question>>(
                     status = true,
                     responseMessage = "Success",
-                    responseBody = repository.getQuestions(Difficulty.valueOf(difficulty))
+                    responseBody = questions
                 )
             )
         } catch (ex: Exception) {
@@ -88,7 +91,7 @@ fun Route.quizRoute(repository: QuizQuestionRepository) {
                         responseBody = emptyList()
                     )
                 )
-            }else{
+            } else {
                 call.respond(
                     status = HttpStatusCode.OK,
                     BaseResponse<List<Question>>(
@@ -105,6 +108,36 @@ fun Route.quizRoute(repository: QuizQuestionRepository) {
                 BaseResponse<List<Question>>(
                     status = false,
                     responseMessage = "Request timeout. \n${ex.message}",
+                    responseBody = null
+                )
+            )
+        }
+    }
+
+    post("compute/questions") {
+        try {
+            val questionAnswers = call.receive<List<QuizAnswer>>()
+            val scoreResponse = computationRepository.calculateScores(questionAnswers)
+
+            call.respond(
+                HttpStatusCode.OK,
+                BaseResponse(
+                    status = true,
+                    responseMessage = "Scores calculated successfully",
+                    responseBody = QuizAnswerResponse(
+                        score = scoreResponse.score,
+                        total = scoreResponse.total,
+                        comment = scoreResponse.comment
+                    )
+                )
+            )
+
+        } catch (ex: Exception) {
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                BaseResponse(
+                    status = true,
+                    responseMessage = "Score computation failed. \n${ex.message}",
                     responseBody = null
                 )
             )
